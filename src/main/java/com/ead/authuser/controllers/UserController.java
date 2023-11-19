@@ -38,8 +38,14 @@ public class UserController {
 
   @GetMapping
   public ResponseEntity<Page<UserModel>> getAllUsers(SpecificationTemplate.UserSpec spec,
-          @PageableDefault(page = 0, size = 10, sort = "userId", direction = Sort.Direction.ASC) Pageable pageable) {
-    Page<UserModel> userModelPage = userService.findAll(spec, pageable);
+                                                     @PageableDefault(page = 0, size = 10, sort = "userId", direction = Sort.Direction.ASC) Pageable pageable,
+                                                     @RequestParam(required = false) UUID courseId) {
+    Page<UserModel> userModelPage = null;
+    if (courseId != null) {
+      userModelPage = userService.findAll(SpecificationTemplate.userCourseId(courseId).and(spec), pageable);
+    } else {
+      userModelPage = userService.findAll(spec, pageable);
+    }
     if (!userModelPage.isEmpty()) {
       for (UserModel user : userModelPage.toList()) {
         user.add(linkTo(methodOn(UserController.class).getOneUSer(user.getUserId())).withSelfRel());
@@ -51,7 +57,7 @@ public class UserController {
   @GetMapping("/{userId}")
   public ResponseEntity<Object> getOneUSer(@PathVariable(value = "userId") UUID userId) {
     Optional<UserModel> userModelOptional = userService.findById(userId);
-    if(!userModelOptional.isPresent()) {
+    if (!userModelOptional.isPresent()) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
     }
     return ResponseEntity.status(HttpStatus.OK).body(userModelOptional.get());
@@ -60,7 +66,7 @@ public class UserController {
   @DeleteMapping("/{userId}")
   public ResponseEntity<Object> deleteUser(@PathVariable(value = "userId") UUID userId) {
     Optional<UserModel> userModelOptional = userService.findById(userId);
-    if(!userModelOptional.isPresent()) {
+    if (!userModelOptional.isPresent()) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
     }
     userService.delete(userModelOptional.get());
@@ -73,7 +79,7 @@ public class UserController {
                                            @JsonView(UserView.UserPut.class) UserDto userDto) {
     log.debug("PUT updateUser userDto received {} ", userDto.toString());
     Optional<UserModel> userModelOptional = userService.findById(userId);
-    if(!userModelOptional.isPresent()) {
+    if (!userModelOptional.isPresent()) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
     }
     UserModel userModel = userModelOptional.get();
@@ -89,10 +95,10 @@ public class UserController {
 
   @PutMapping("/{userId}/password")
   public ResponseEntity<Object> updatePassword(@PathVariable(value = "userId") UUID userId,
-                                           @RequestBody @Validated(UserView.PasswordPut.class)
-                                           @JsonView(UserView.PasswordPut.class) UserDto userDto) {
+                                               @RequestBody @Validated(UserView.PasswordPut.class)
+                                               @JsonView(UserView.PasswordPut.class) UserDto userDto) {
     Optional<UserModel> userModelOptional = userService.findById(userId);
-    if(!userModelOptional.isPresent()) {
+    if (!userModelOptional.isPresent()) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
     }
     if (!userModelOptional.get().getPassword().equals(userDto.oldPassword())) {
@@ -107,10 +113,10 @@ public class UserController {
 
   @PutMapping("/{userId}/image")
   public ResponseEntity<Object> updateImage(@PathVariable(value = "userId") UUID userId,
-                                               @RequestBody @Validated(UserView.ImagePut.class)
-                                               @JsonView(UserView.ImagePut.class) UserDto userDto) {
+                                            @RequestBody @Validated(UserView.ImagePut.class)
+                                            @JsonView(UserView.ImagePut.class) UserDto userDto) {
     Optional<UserModel> userModelOptional = userService.findById(userId);
-    if(!userModelOptional.isPresent()) {
+    if (!userModelOptional.isPresent()) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
     }
     UserModel userModel = userModelOptional.get();

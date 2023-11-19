@@ -1,6 +1,7 @@
 package com.ead.authuser.services.impl;
 
 import com.ead.authuser.models.UserModel;
+import com.ead.authuser.repositories.UserCourseRepository;
 import com.ead.authuser.repositories.UserRepository;
 import com.ead.authuser.services.UserService;
 import org.springframework.data.domain.Page;
@@ -16,9 +17,11 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
   final UserRepository userRepository;
+  final UserCourseRepository userCourseRepository;
 
-  public UserServiceImpl(UserRepository userRepository) {
+  public UserServiceImpl(UserRepository userRepository, UserCourseRepository userCourseRepository) {
     this.userRepository = userRepository;
+    this.userCourseRepository = userCourseRepository;
   }
 
   @Override
@@ -26,11 +29,17 @@ public class UserServiceImpl implements UserService {
     return userRepository.findAll();
   }
 
-  @Override public Optional<UserModel> findById(UUID userId) {
+  @Override
+  public Optional<UserModel> findById(UUID userId) {
     return userRepository.findById(userId);
   }
 
-  @Override public void delete(UserModel userModel) {
+  @Override
+  public void delete(UserModel userModel) {
+    var userCourseModelList = userCourseRepository.findAllUserCourseIntoUser(userModel.getUserId());
+    if(!userCourseModelList.isEmpty()) {
+      userCourseRepository.deleteAll(userCourseModelList);
+    }
     userRepository.delete(userModel);
   }
 
