@@ -18,6 +18,8 @@ spring:
   output:
     ansi:
       enabled: Always
+  application:
+    name: ead-authuser-service
 
 logging:
   level:
@@ -30,3 +32,10 @@ ead:
   api:
     url:
       course: 'http://localhost:8082'
+
+eureka:
+  client:
+    service-url:
+      default-zone: 'http:localhost:8761/eureka'
+  instance:
+    hostname: localhost
